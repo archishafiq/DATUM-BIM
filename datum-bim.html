@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datum — BIM Coordination &amp; Training</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --paper:#EFECE3;
+    --paper-2:#E6E2D6;
+    --ink:#1B2027;
+    --ink-soft:#454C57;
+    --blueprint:#2F5D8A;
+    --blueprint-deep:#1E3E5C;
+    --signal:#C9622A;
+    --line:#B9BEB0;
+    --white:#FCFBF7;
+    --radius:2px;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--blueprint); color:var(--white);}
+
+  h1,h2,h3{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    color:var(--ink);
+  }
+  .mono{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:0.78rem;
+    color:var(--ink-soft);
+    letter-spacing:0.02em;
+  }
+  a{color:inherit; text-decoration:none;}
+  img,svg{display:block; max-width:100%;}
+
+  .wrap{max-width:1180px; margin:0 auto; padding:0 32px;}
+  @media (max-width:640px){ .wrap{padding:0 20px;} }
+
+  /* subtle drafting grid backdrop */
+  .grid-bg{
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:64px 64px;
+    background-position:-1px -1px;
+    opacity:0.35;
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+  }
+
+  /* ---------- header ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(239,236,227,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 0;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:28px; height:28px;
+    border:1.5px solid var(--ink);
+    position:relative;
+    flex-shrink:0;
+  }
+  .brand-mark::before, .brand-mark::after{
+    content:'';
+    position:absolute;
+    background:var(--blueprint);
+  }
+  .brand-mark::before{ top:50%; left:-5px; width:6px; height:1.5px; transform:translateY(-50%);}
+  .brand-mark::after{ left:50%; top:-5px; height:6px; width:1.5px; transform:translateX(-50%);}
+  .brand-name{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1.05rem;}
+  .brand-name span{color:var(--blueprint);}
+
+  nav.links{display:flex; gap:34px; align-items:center;}
+  nav.links a{font-size:0.92rem; color:var(--ink-soft); transition:color .15s;}
+  nav.links a:hover{color:var(--ink);}
+  .nav-cta{
+    border:1px solid var(--ink); padding:8px 18px;
+    font-size:0.88rem; font-weight:500;
+    transition:background .15s, color .15s;
+  }
+  .nav-cta:hover{background:var(--ink); color:var(--white);}
+  .menu-btn{display:none; background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--ink);}
+  @media (max-width:860px){
+    nav.links{display:none;}
+    .menu-btn{display:block;}
+  }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;
+    overflow:hidden;
+    padding:96px 0 80px;
+    border-bottom:1px solid var(--line);
+  }
+  .hero-inner{
+    position:relative; z-index:2;
+    display:grid;
+    grid-template-columns:1.1fr 0.9fr;
+    gap:56px;
+    align-items:center;
+  }
+  @media (max-width:900px){ .hero-inner{grid-template-columns:1fr;} }
+
+  .kicker{
+    display:flex; align-items:center; gap:10px;
+    color:var(--blueprint-deep);
+    margin-bottom:22px;
+  }
+  .kicker .dot{width:6px; height:6px; background:var(--signal); border-radius:50%;}
+
+  .hero h1{
+    font-size:clamp(2.4rem, 5vw, 3.6rem);
+    line-height:1.06;
+    max-width:11ch;
+  }
+  .hero p.lead{
+    margin-top:22px;
+    font-size:1.1rem;
+    color:var(--ink-soft);
+    max-width:46ch;
+  }
+  .hero-cta{
+    display:flex; gap:14px; margin-top:36px; flex-wrap:wrap;
+  }
+  .btn{
+    padding:13px 24px;
+    font-size:0.95rem;
+    font-weight:500;
+    border:1px solid var(--ink);
+    display:inline-block;
+    transition:transform .15s ease, background .15s, color .15s;
+  }
+  .btn-solid{background:var(--ink); color:var(--white);}
+  .btn-solid:hover{background:var(--blueprint-deep); border-color:var(--blueprint-deep); transform:translateY(-1px);}
+  .btn-ghost:hover{background:var(--ink); color:var(--white); transform:translateY(-1px);}
+
+  .hero-stats{
+    display:flex; gap:34px; margin-top:48px; flex-wrap:wrap;
+  }
+  .stat b{
+    display:block; font-family:'Space Grotesk',sans-serif; font-size:1.6rem; font-weight:600;
+  }
+  .stat span{font-size:0.82rem; color:var(--ink-soft);}
+
+  /* hero diagram */
+  .hero-diagram{
+    position:relative;
+    aspect-ratio:1/1;
+    max-width:460px;
+    margin:0 auto;
+  }
+
+  /* ---------- section shell ---------- */
+  section{padding:96px 0;}
+  .section-head{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    gap:24px; margin-bottom:52px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:22px;
+  }
+  .section-head h2{font-size:clamp(1.7rem,3vw,2.3rem);}
+  .section-tag{
+    display:flex; align-items:center; gap:8px;
+  }
+  .section-tag .num{color:var(--blueprint); }
+  .section-note{max-width:34ch; color:var(--ink-soft); font-size:0.95rem;}
+
+  /* ---------- services ---------- */
+  .services-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+  }
+  @media (max-width:860px){ .services-grid{grid-template-columns:1fr;} }
+  .service{
+    background:var(--paper);
+    padding:36px 30px;
+    position:relative;
+  }
+  .service .svc-code{color:var(--blueprint); margin-bottom:18px; display:block;}
+  .service h3{font-size:1.2rem; margin-bottom:12px;}
+  .service p{color:var(--ink-soft); font-size:0.94rem;}
+  .service:hover{background:var(--white);}
+
+  /* ---------- coordination visual band ---------- */
+  .band{
+    background:var(--ink);
+    color:var(--paper);
+    padding:70px 0;
+  }
+  .band .wrap{
+    display:grid; grid-template-columns:0.9fr 1.1fr; gap:56px; align-items:center;
+  }
+  @media (max-width:900px){ .band .wrap{grid-template-columns:1fr;} }
+  .band h2{color:var(--white); font-size:clamp(1.6rem,3vw,2.1rem); max-width:14ch;}
+  .band p{color:#C5CAD2; margin-top:16px; max-width:44ch;}
+  .layer-list{margin-top:26px; display:flex; flex-direction:column; gap:10px;}
+  .layer-list li{list-style:none; display:flex; gap:12px; align-items:center; font-size:0.9rem; color:#DFE2E6;}
+  .layer-list .swatch{width:12px; height:12px; flex-shrink:0;}
+
+  /* ---------- teaching ---------- */
+  .courses{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:28px;
+  }
+  @media (max-width:760px){ .courses{grid-template-columns:1fr;} }
+  .course-card{
+    border:1px solid var(--line);
+    background:var(--white);
+    padding:0;
+    display:flex; flex-direction:column;
+  }
+  .course-top{
+    padding:26px 28px 20px;
+    border-bottom:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:flex-start; gap:16px;
+  }
+  .course-top h3{font-size:1.15rem;}
+  .level-tag{
+    font-family:'IBM Plex Mono',monospace; font-size:0.72rem;
+    border:1px solid var(--blueprint); color:var(--blueprint);
+    padding:3px 8px; white-space:nowrap;
+  }
+  .course-body{padding:20px 28px 28px; color:var(--ink-soft); font-size:0.92rem;}
+  .course-meta{
+    display:flex; gap:20px; padding:16px 28px; border-top:1px solid var(--line);
+    font-size:0.82rem; color:var(--ink-soft);
+    margin-top:auto;
+  }
+
+  /* ---------- projects ---------- */
+  .projects{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:24px;
+  }
+  @media (max-width:900px){ .projects{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:600px){ .projects{grid-template-columns:1fr;} }
+  .project-card{
+    border:1px solid var(--line);
+    background:var(--white);
+    overflow:hidden;
+  }
+  .project-thumb{
+    aspect-ratio:4/3;
+    background:var(--paper-2);
+    position:relative;
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+  }
+  .project-info{padding:18px 20px;}
+  .project-info .mono{margin-bottom:6px; display:block;}
+  .project-info h3{font-size:1.02rem; margin-bottom:6px;}
+  .project-info p{font-size:0.86rem; color:var(--ink-soft);}
+
+  /* ---------- about ---------- */
+  .about{
+    display:grid; grid-template-columns:0.85fr 1.15fr; gap:64px; align-items:start;
+  }
+  @media (max-width:900px){ .about{grid-template-columns:1fr;} }
+  .about-figure{
+    border:1px solid var(--ink);
+    aspect-ratio:3/4;
+    position:relative;
+    overflow:hidden;
+    background:var(--paper-2);
+  }
+  .about-text p{color:var(--ink-soft); margin-bottom:18px; font-size:1rem; max-width:56ch;}
+  .credentials{
+    margin-top:30px; display:grid; grid-template-columns:repeat(2,1fr); gap:20px;
+  }
+  .credentials div{border-top:1px solid var(--line); padding-top:12px;}
+  .credentials b{display:block; font-family:'Space Grotesk',sans-serif; font-size:1rem; margin-bottom:4px;}
+  .credentials span{font-size:0.84rem; color:var(--ink-soft);}
+
+  /* ---------- contact ---------- */
+  .contact-band{
+    background:var(--blueprint-deep);
+    color:var(--white);
+    padding:90px 0;
+    position:relative;
+    overflow:hidden;
+  }
+  .contact-inner{
+    display:grid; grid-template-columns:1.1fr 0.9fr; gap:56px; align-items:end;
+    position:relative; z-index:2;
+  }
+  @media (max-width:900px){ .contact-inner{grid-template-columns:1fr;} }
+  .contact-band h2{color:var(--white); font-size:clamp(1.8rem,3.6vw,2.6rem); max-width:13ch;}
+  .contact-band p{color:#C7D3E0; margin-top:16px; max-width:44ch;}
+  .contact-card{
+    background:var(--white); color:var(--ink);
+    padding:32px; border:1px solid rgba(255,255,255,0.15);
+  }
+  .contact-card .mono{margin-bottom:18px; color:var(--ink-soft);}
+  .contact-row{
+    display:flex; justify-content:space-between; padding:14px 0; border-top:1px solid var(--line);
+    font-size:0.92rem;
+  }
+  .contact-row:last-child{border-bottom:1px solid var(--line);}
+  .contact-row a:hover{color:var(--blueprint);}
+
+  footer{
+    padding:36px 0; border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;
+  }
+  footer .mono{color:var(--ink-soft);}
+
+  .reveal{opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+  @media (prefers-reduced-motion:reduce){
+    .reveal{opacity:1; transform:none; transition:none;}
+    html{scroll-behavior:auto;}
+  }
+
+  :focus-visible{outline:2px solid var(--blueprint); outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-name">DATUM<span>/BIM</span></div>
+    </div>
+    <nav class="links">
+      <a href="#services">Coordination</a>
+      <a href="#teaching">Training</a>
+      <a href="#projects">Projects</a>
+      <a href="#about">About</a>
+      <a href="#contact" class="nav-cta">Start a project</a>
+    </nav>
+    <button class="menu-btn" aria-label="Menu">☰</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="grid-bg"></div>
+  <div class="wrap hero-inner">
+    <div>
+      <div class="kicker mono"><span class="dot"></span>REVIT · NAVISWORKS · IFC · CLASH COORDINATION</div>
+      <h1>Models that agree with each other before construction does.</h1>
+      <p class="lead">BIM coordination, clash detection, and hands-on training for architecture, structural, and MEP teams who need their models — and their people — working from the same reference point.</p>
+      <div class="hero-cta">
+        <a href="#contact" class="btn btn-solid">Book a coordination review</a>
+        <a href="#teaching" class="btn btn-ghost">See training courses</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><b>140+</b><span>coordination cycles run</span></div>
+        <div class="stat"><b>900+</b><span>professionals trained</span></div>
+        <div class="stat"><b>6</b><span>disciplines integrated per model</span></div>
+      </div>
+    </div>
+
+    <div class="hero-diagram">
+      <svg viewBox="0 0 420 420" width="100%" height="100%">
+        <!-- floor grid -->
+        <g stroke="#9AA3AD" stroke-width="1" opacity="0.6">
+          <line x1="30" y1="330" x2="390" y2="330"/>
+          <line x1="30" y1="330" x2="130" y2="380"/>
+          <line x1="390" y1="330" x2="290" y2="380"/>
+          <line x1="130" y1="380" x2="290" y2="380"/>
+        </g>
+        <!-- axon building layers: structure, architecture, MEP -->
+        <g>
+          <polygon points="90,300 300,300 330,260 120,260" fill="none" stroke="#1B2027" stroke-width="1.6"/>
+          <polygon points="90,300 120,260 120,180 90,220" fill="none" stroke="#1B2027" stroke-width="1.6"/>
+          <polygon points="300,300 330,260 330,180 300,220" fill="none" stroke="#1B2027" stroke-width="1.6"/>
+        </g>
+        <g opacity="0.9">
+          <polygon points="90,220 300,220 330,180 120,180" fill="none" stroke="#2F5D8A" stroke-width="1.6"/>
+          <line x1="90" y1="220" x2="90" y2="300" stroke="#2F5D8A" stroke-width="1.2" stroke-dasharray="3 3"/>
+          <line x1="330" y1="180" x2="330" y2="260" stroke="#2F5D8A" stroke-width="1.2" stroke-dasharray="3 3"/>
+        </g>
+        <!-- MEP run -->
+        <g stroke="#C9622A" stroke-width="2" fill="none">
+          <path d="M100,240 L180,240 L180,210 L260,210 L260,190"/>
+          <circle cx="180" cy="240" r="3" fill="#C9622A"/>
+          <circle cx="260" cy="210" r="3" fill="#C9622A"/>
+        </g>
+        <!-- clash marker -->
+        <g>
+          <circle cx="230" cy="222" r="14" fill="none" stroke="#C9622A" stroke-width="1.4"/>
+          <line x1="223" y1="215" x2="237" y2="229" stroke="#C9622A" stroke-width="1.4"/>
+          <line x1="237" y1="215" x2="223" y2="229" stroke="#C9622A" stroke-width="1.4"/>
+        </g>
+        <!-- grid bubbles -->
+        <g font-family="IBM Plex Mono, monospace" font-size="11" fill="#454C57">
+          <circle cx="30" cy="200" r="11" fill="#EFECE3" stroke="#9AA3AD" stroke-width="1"/>
+          <text x="30" y="204" text-anchor="middle">A</text>
+          <circle cx="30" cy="330" r="11" fill="#EFECE3" stroke="#9AA3AD" stroke-width="1"/>
+          <text x="30" y="334" text-anchor="middle">B</text>
+          <circle cx="390" cy="330" r="11" fill="#EFECE3" stroke="#9AA3AD" stroke-width="1"/>
+          <text x="390" y="334" text-anchor="middle">1</text>
+        </g>
+        <text x="30" y="70" font-family="IBM Plex Mono, monospace" font-size="11" fill="#454C57">LOD 350 · COORDINATED</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section id="services">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-tag mono"><span class="num">01</span> / SERVICES</div>
+        <h2>BIM coordination</h2>
+      </div>
+      <p class="section-note">Federated models, resolved clashes, and a coordination log your whole project team can actually follow.</p>
+    </div>
+
+    <div class="services-grid">
+      <div class="service">
+        <span class="svc-code mono">SV.01</span>
+        <h3>Clash detection &amp; resolution</h3>
+        <p>Federated model reviews across architecture, structure, and MEP with prioritized clash reports and tracked resolutions, not just flagged geometry.</p>
+      </div>
+      <div class="service">
+        <span class="svc-code mono">SV.02</span>
+        <h3>Model coordination management</h3>
+        <p>Weekly or biweekly coordination cycles, meeting facilitation, and a single source of truth for issue status across every trade on the job.</p>
+      </div>
+      <div class="service">
+        <span class="svc-code mono">SV.03</span>
+        <h3>LOD &amp; standards setup</h3>
+        <p>BIM execution plans, level-of-development matrices, and naming/modeling standards written so every consultant can follow them without guessing.</p>
+      </div>
+      <div class="service">
+        <span class="svc-code mono">SV.04</span>
+        <h3>Constructability review</h3>
+        <p>Sequence-aware model checks that catch access, tolerance, and installation issues before they reach the field.</p>
+      </div>
+      <div class="service">
+        <span class="svc-code mono">SV.05</span>
+        <h3>4D &amp; scheduling support</h3>
+        <p>Linking the coordinated model to your construction schedule so sequencing conflicts show up on screen, not on site.</p>
+      </div>
+      <div class="service">
+        <span class="svc-code mono">SV.06</span>
+        <h3>Model audits</h3>
+        <p>Independent health checks on an existing model — file structure, parameters, and coordination readiness — before you bring in more consultants.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="band">
+  <div class="wrap">
+    <div>
+      <div class="mono" style="color:#8CA3BC;">HOW A COORDINATION CYCLE RUNS</div>
+      <h2>One federated model, every discipline accountable to it.</h2>
+      <p>Each discipline models to the agreed standard, the federated model is checked against every other layer, and issues are logged, assigned, and closed before the next cycle opens.</p>
+      <ul class="layer-list">
+        <li><span class="swatch" style="background:#1B2027;"></span> Architectural model — spatial envelope and finishes</li>
+        <li><span class="swatch" style="background:#2F5D8A;"></span> Structural model — framing, foundations, load paths</li>
+        <li><span class="swatch" style="background:#C9622A;"></span> MEP model — ductwork, piping, conduit routing</li>
+      </ul>
+    </div>
+    <div>
+      <svg viewBox="0 0 480 300" width="100%" height="auto">
+        <rect x="0" y="0" width="480" height="300" fill="none"/>
+        <!-- three stacked wireframe plans -->
+        <g stroke="#3A4048" stroke-width="1" opacity="0.8">
+          <rect x="40" y="30" width="280" height="180" fill="none"/>
+        </g>
+        <g stroke="#5A7DA0" stroke-width="1" opacity="0.9">
+          <rect x="70" y="55" width="280" height="180" fill="none"/>
+        </g>
+        <g stroke="#C9622A" stroke-width="1" opacity="0.95">
+          <rect x="100" y="80" width="280" height="180" fill="none"/>
+        </g>
+        <!-- routing lines through the MEP layer -->
+        <g stroke="#E1946B" stroke-width="1.6" fill="none">
+          <path d="M120,120 L260,120 L260,180 L360,180"/>
+          <circle cx="260" cy="120" r="2.6" fill="#E1946B"/>
+          <circle cx="260" cy="180" r="2.6" fill="#E1946B"/>
+        </g>
+        <g font-family="IBM Plex Mono, monospace" font-size="10" fill="#9FB0C4">
+          <text x="40" y="22">ARCH</text>
+          <text x="70" y="47">STRUC</text>
+          <text x="100" y="72">MEP</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<section id="teaching">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-tag mono"><span class="num">02</span> / TRAINING</div>
+        <h2>BIM teaching &amp; workshops</h2>
+      </div>
+      <p class="section-note">Courses for individuals building BIM skills and teams standardizing how they coordinate.</p>
+    </div>
+
+    <div class="courses">
+      <div class="course-card">
+        <div class="course-top">
+          <h3>Revit for Coordination</h3>
+          <span class="level-tag">INTERMEDIATE</span>
+        </div>
+        <div class="course-body">Modeling to LOD standards, worksharing, shared coordinates, and preparing discipline models for federation.</div>
+        <div class="course-meta"><span>6 sessions</span><span>Live + recorded</span><span>Certificate</span></div>
+      </div>
+
+      <div class="course-card">
+        <div class="course-top">
+          <h3>Clash Detection with Navisworks</h3>
+          <span class="level-tag">INTERMEDIATE</span>
+        </div>
+        <div class="course-body">Running clash tests, reading clash reports, prioritizing issues, and managing resolution logs across trades.</div>
+        <div class="course-meta"><span>4 sessions</span><span>Live + recorded</span><span>Certificate</span></div>
+      </div>
+
+      <div class="course-card">
+        <div class="course-top">
+          <h3>BIM Fundamentals</h3>
+          <span class="level-tag">BEGINNER</span>
+        </div>
+        <div class="course-body">What BIM actually changes about project delivery, core terminology, LOD, and how the disciplines fit together.</div>
+        <div class="course-meta"><span>5 sessions</span><span>Live + recorded</span><span>Certificate</span></div>
+      </div>
+
+      <div class="course-card">
+        <div class="course-top">
+          <h3>BIM Execution Planning</h3>
+          <span class="level-tag">ADVANCED</span>
+        </div>
+        <div class="course-body">Writing a BEP your whole consultant team will follow — standards, roles, exchange formats, and coordination cadence.</div>
+        <div class="course-meta"><span>3 sessions</span><span>Live + recorded</span><span>Certificate</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="section-tag mono"><span class="num">03</span> / PROJECTS</div>
+        <h2>Selected coordination work</h2>
+      </div>
+      <p class="section-note">A sample of models coordinated end to end, from design development through construction.</p>
+    </div>
+
+    <div class="projects">
+      <div class="project-card">
+        <div class="project-thumb">
+          <svg viewBox="0 0 300 225" width="100%" height="100%">
+            <rect width="300" height="225" fill="#E6E2D6"/>
+            <g stroke="#1B2027" stroke-width="1" opacity="0.8">
+              <rect x="40" y="60" width="180" height="120"/>
+              <line x1="40" y1="100" x2="220" y2="100"/>
+              <line x1="100" y1="60" x2="100" y2="180"/>
+            </g>
+            <g stroke="#C9622A" stroke-width="1.4" fill="none">
+              <path d="M50,130 L150,130 L150,150 L210,150"/>
+            </g>
+          </svg>
+        </div>
+        <div class="project-info">
+          <span class="mono">HEALTHCARE / 210,000 SF</span>
+          <h3>Regional Medical Center — MEP Coordination</h3>
+          <p>Full federated coordination across six trades in a phased hospital expansion.</p>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <div class="project-thumb">
+          <svg viewBox="0 0 300 225" width="100%" height="100%">
+            <rect width="300" height="225" fill="#E6E2D6"/>
+            <g stroke="#1B2027" stroke-width="1" opacity="0.8">
+              <polygon points="60,180 150,60 240,180" fill="none"/>
+              <line x1="60" y1="180" x2="240" y2="180"/>
+            </g>
+            <g stroke="#2F5D8A" stroke-width="1.4">
+              <line x1="90" y1="150" x2="210" y2="150"/>
+              <line x1="105" y1="120" x2="195" y2="120"/>
+            </g>
+          </svg>
+        </div>
+        <div class="project-info">
+          <span class="mono">MIXED-USE / 38 STORIES</span>
+          <h3>Meridian Tower — Structural &amp; Facade Clash Review</h3>
+          <p>Facade panel and structural sequencing coordination for a high-rise mixed-use tower.</p>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <div class="project-thumb">
+          <svg viewBox="0 0 300 225" width="100%" height="100%">
+            <rect width="300" height="225" fill="#E6E2D6"/>
+            <g stroke="#1B2027" stroke-width="1" opacity="0.8">
+              <rect x="50" y="70" width="70" height="100"/>
+              <rect x="130" y="70" width="70" height="100"/>
+              <rect x="210" y="70" width="40" height="100"/>
+            </g>
+            <g stroke="#C9622A" stroke-width="1.4" fill="none">
+              <path d="M55,90 L245,90"/>
+              <path d="M55,140 L245,140"/>
+            </g>
+          </svg>
+        </div>
+        <div class="project-info">
+          <span class="mono">EDUCATION / CAMPUS</span>
+          <h3>Lakeview Campus — Model Audit &amp; Standards Rollout</h3>
+          <p>Modeling standards, BEP rewrite, and coordination process rebuilt across a five-building campus.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="wrap about">
+    <div class="about-figure">
+      <svg viewBox="0 0 300 400" width="100%" height="100%">
+        <rect width="300" height="400" fill="#E6E2D6"/>
+        <g stroke="#1B2027" stroke-width="1" opacity="0.7">
+          <line x1="0" y1="80" x2="300" y2="80"/>
+          <line x1="0" y1="320" x2="300" y2="320"/>
+          <line x1="60" y1="0" x2="60" y2="400"/>
+          <line x1="240" y1="0" x2="240" y2="400"/>
+        </g>
+        <g stroke="#2F5D8A" stroke-width="1.4" fill="none">
+          <circle cx="150" cy="160" r="46"/>
+          <path d="M150,206 L150,320"/>
+          <path d="M80,320 Q150,260 220,320"/>
+        </g>
+        <g font-family="IBM Plex Mono, monospace" font-size="10" fill="#454C57">
+          <text x="12" y="20">SHEET A-101</text>
+          <text x="12" y="390">SCALE 1:50</text>
+        </g>
+      </svg>
+    </div>
+    <div class="about-text">
+      <div class="section-tag mono" style="margin-bottom:14px;"><span class="num">04</span> / ABOUT</div>
+      <h2 style="font-size:clamp(1.6rem,3vw,2.1rem); margin-bottom:20px;">Ten years between the model and the job site.</h2>
+      <p>I started as a Revit modeler on hospital projects, moved into clash coordination when the federated models got too large for spreadsheets to manage, and now split my time between running coordination on active projects and training the next set of BIM coordinators to do the same.</p>
+      <p>Every course and every engagement comes from the same place: a coordination process is only as good as the discipline behind it. That's what I teach, and it's what I run on every project I coordinate.</p>
+      <div class="credentials">
+        <div><b>Autodesk Certified Professional</b><span>Revit &amp; Navisworks</span></div>
+        <div><b>10+ years</b><span>in BIM coordination</span></div>
+        <div><b>900+ trained</b><span>across workshops &amp; courses</span></div>
+        <div><b>140+ cycles</b><span>coordination cycles delivered</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="contact-band" id="contact">
+  <div class="grid-bg" style="opacity:0.12;"></div>
+  <div class="wrap contact-inner">
+    <div>
+      <div class="mono" style="color:#9FB0C4; margin-bottom:14px;">05 / START A PROJECT</div>
+      <h2>Let's get your models talking to each other.</h2>
+      <p>Tell me about the project — phase, disciplines involved, and what's not coordinating yet. I'll follow up within one business day.</p>
+    </div>
+    <div class="contact-card">
+      <div class="mono">DIRECT CONTACT</div>
+      <div class="contact-row"><span>Email</span><a href="mailto:hello@datumbim.com">hello@datumbim.com</a></div>
+      <div class="contact-row"><span>Phone</span><a href="tel:+10000000000">+1 (000) 000-0000</a></div>
+      <div class="contact-row"><span>Location</span><span>Available for remote &amp; on-site work</span></div>
+      <div class="contact-row"><span>Response time</span><span>1 business day</span></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; width:100%;">
+    <div class="mono">© 2026 DATUM / BIM COORDINATION &amp; TRAINING</div>
+    <div class="mono">MODEL. COORDINATE. TEACH.</div>
+  </div>
+</footer>
+
+<script>
+  const els = document.querySelectorAll('section, .band, .contact-band');
+  els.forEach(el => el.classList.add('reveal'));
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, {threshold:0.1});
+  els.forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>
